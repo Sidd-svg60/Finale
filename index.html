@@ -2,87 +2,73 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Hand Cricket Multiplayer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hand Cricket Multiplayer - Siddhant</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #121212;
-      color: #e0e0e0;
       text-align: center;
-      margin: 0;
-      padding: 0;
+      padding: 20px;
+      background-color: #f2f2f2;
     }
-    h1, h2 {
-      color: #00ffc8;
-      text-shadow: 0px 0px 10px #00ffc8;
+    #lobbyScreen, #gameScreen {
+      display: none;
+      margin-top: 20px;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
-    #gameScreen { display: none; }
-    button {
-      margin: 8px;
-      padding: 12px 20px;
-      border: none;
-      border-radius: 8px;
-      background: #1f1f1f;
-      color: #00ffc8;
-      font-size: 16px;
-      cursor: pointer;
-      transition: 0.3s;
-      box-shadow: 0px 0px 5px #00ffc8;
-    }
-    button:hover {
-      background: #00ffc8;
-      color: #121212;
-      box-shadow: 0px 0px 15px #00ffc8;
-    }
-    input {
+    input, button {
       padding: 10px;
-      border-radius: 6px;
-      border: none;
-      outline: none;
-      text-align: center;
+      margin: 5px;
+      font-size: 16px;
     }
-    input[readonly] {
-      background-color: #1f1f1f;
-      color: #00ffc8;
+    .moveBtn {
+      width: 60px;
+      margin: 5px;
+      cursor: pointer;
+    }
+    #scoreBoard {
+      margin-top: 20px;
       font-weight: bold;
     }
-    #roomCodeBox { margin-top: 20px; display:none; }
-    footer {
-      margin-top: 30px;
-      padding: 15px;
-      background: #1f1f1f;
-      color: #888;
-      font-size: 14px;
+    #status {
+      margin-top: 15px;
+      font-size: 18px;
+      color: #333;
+    }
+    #roomCodeBox {
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-  <h1>Hand Cricket Multiplayer</h1>
 
-  <!-- Lobby Screen -->
+  <h1>Hand Cricket Multiplayer</h1>
+  <h2>by Siddhant</h2>
+
   <div id="lobbyScreen">
-    <h2>Create or Join Game</h2>
     <input type="text" id="playerName" placeholder="Enter your name" />
-    <br><br>
+    <br>
     <button id="createGameBtn">Create Game</button>
-    <br><br>
+    <br>
     <input type="text" id="roomCodeInput" placeholder="Enter Room Code" />
     <button id="joinGameBtn">Join Game</button>
 
-    <div id="roomCodeBox">
+    <div id="roomCodeBox" style="display:none;">
       <p>Room Code:</p>
-      <input type="text" id="roomCodeDisplay" readonly style="font-size:18px; text-align:center; width:120px;">
-      <br><br>
+      <input type="text" id="roomCodeDisplay" readonly />
       <button id="copyCodeBtn">Copy Code</button>
     </div>
   </div>
 
-  <!-- Game Screen -->
   <div id="gameScreen">
-    <h2 id="status">Waiting...</h2>
     <p id="roomInfo"></p>
-    <div id="scoreBoard"></div>
-    <div>
+    <div id="status">Waiting for players...</div>
+
+    <div id="moves">
+      <p>Make your move:</p>
       <button class="moveBtn" data-move="1">1</button>
       <button class="moveBtn" data-move="2">2</button>
       <button class="moveBtn" data-move="3">3</button>
@@ -90,10 +76,12 @@
       <button class="moveBtn" data-move="5">5</button>
       <button class="moveBtn" data-move="6">6</button>
     </div>
+
+    <div id="scoreBoard"></div>
   </div>
 
-  <footer>Developed by Siddhant Dixit</footer>
+  <!-- Firebase SDKs -->
+  <script type="module" src="game.js"></script>
 
-  <script type="module" src="./main.js"></script>
 </body>
 </html>

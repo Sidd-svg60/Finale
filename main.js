@@ -1,91 +1,3 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getDatabase, ref, set, get, onValue, update } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyB4BAOLryVquqH_tqYPHUi4RypwOvWqrLo",
-  authDomain: "iiiiiiii-1b65f.firebaseapp.com",
-  databaseURL: "https://iiiiiiii-1b65f-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "iiiiiiii-1b65f",
-  storageBucket: "iiiiiiii-1b65f.firebasestorage.app",
-  messagingSenderId: "351966581285",
-  appId: "1:351966581285:web:a9c36086e659fd6048a5cc",
-  measurementId: "G-LC4HKZZDG2"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-// Elements
-const lobbyScreen = document.getElementById("lobbyScreen");
-const gameScreen = document.getElementById("gameScreen");
-const createGameBtn = document.getElementById("createGameBtn");
-const joinGameBtn = document.getElementById("joinGameBtn");
-const playerNameInput = document.getElementById("playerName");
-const roomCodeInput = document.getElementById("roomCodeInput");
-const statusText = document.getElementById("status");
-const scoreBoard = document.getElementById("scoreBoard");
-const roomInfo = document.getElementById("roomInfo");
-const roomCodeBox = document.getElementById("roomCodeBox");
-const roomCodeDisplay = document.getElementById("roomCodeDisplay");
-const copyCodeBtn = document.getElementById("copyCodeBtn");
-
-let playerName = "";
-let playerRole = "";
-let roomId = "";
-
-// Utility
-function generateRoomCode() {
-  return Math.random().toString(36).substring(2, 7).toUpperCase();
-}
-
-// Create Game
-createGameBtn.addEventListener("click", () => {
-  playerName = playerNameInput.value.trim();
-  if (!playerName) return alert("Enter your name!");
-
-  roomId = generateRoomCode();
-  playerRole = "player1";
-
-  set(ref(db, "games/" + roomId), {
-    player1: { name: playerName, score: 0 },
-    player2: { name: null, score: 0 },
-    inning: 1,
-    batting: "player1",
-    bowling: "player2",
-    moves: {},
-    roomCode: roomId
-  });
-
-  roomCodeBox.style.display = "block";
-  roomCodeDisplay.value = roomId;
-
-  startListening();
-});
-
-// Copy Room Code
-copyCodeBtn.addEventListener("click", () => {
-  navigator.clipboard.writeText(roomCodeDisplay.value);
-  alert("Room code copied: " + roomCodeDisplay.value);
-});
-
-// Join Game
-joinGameBtn.addEventListener("click", async () => {
-  playerName = playerNameInput.value.trim();
-  if (!playerName) return alert("Enter your name!");
-
-  roomId = roomCodeInput.value.trim().toUpperCase();
-  if (!roomId) return alert("Enter valid room code");
-
-  const snapshot = await get(ref(db, "games/" + roomId));
-  if (!snapshot.exists()) return alert("Room not found!");
-
-  playerRole = "player2";
-  update(ref(db, "games/" + roomId + "/player2"), { name: playerName, score: 0 });
-
-  startListening();
-});
-
-// Start listening for game updates
 function startListening() {
   lobbyScreen.style.display = "none";
   gameScreen.style.display = "block";
@@ -93,34 +5,36 @@ function startListening() {
 
   const gameRef = ref(db, "games/" + roomId);
 
-  onValue(gameRef, (snapshot) => {
+  onValue(gameRef, async (snapshot) => {
     const data = snapshot.val();
     if (!data || !data.player1.name || !data.player2.name) {
       statusText.innerText = "Waiting for both players to join...";
       return;
     }
 
-    // Display batting/bowling info
+    // Show who is batting/bowling
     const battingName = data[data.batting]?.name;
     const bowlingName = data[data.bowling]?.name;
     statusText.innerHTML = `Inning ${data.inning}: <br>${battingName} is Batting, ${bowlingName} is Bowling`;
 
-    // Display scores
+    // Show scores
     scoreBoard.innerHTML = `${data.player1.name}: ${data.player1.score} runs<br>${data.player2.name}: ${data.player2.score} runs`;
 
-    // Check if both moves submitted
-    if (Object.keys(data.moves).length === 2) {
+    // Process moves only if both players have submitted
+    const moves = data.moves || {};
+    if (moves.player1 != null && moves.player2 != null) {
       const batterRole = data.batting;
       const bowlerRole = data.bowling;
-      const batterMove = data.moves[batterRole];
-      const bowlerMove = data.moves[bowlerRole];
+      const batterMove = parseInt(moves[batterRole]);
+      const bowlerMove = parseInt(moves[bowlerRole]);
 
       if (batterMove === bowlerMove) {
+        // Player is OUT
         alert(`${data[batterRole].name} is OUT!`);
 
         if (data.inning === 1) {
           // Switch innings
-          update(ref(db, "games/" + roomId), {
+          await update(ref(db, "games/" + roomId), {
             inning: 2,
             batting: data.bowling,
             bowling: data.batting,
@@ -134,23 +48,24 @@ function startListening() {
           if (player1Score > player2Score) winner = `${data.player1.name} wins!`;
           else if (player2Score > player1Score) winner = `${data.player2.name} wins!`;
           alert(`Game Over! ${winner}`);
-          // Reset moves to allow replay
-          update(ref(db, "games/" + roomId), { moves: {} });
+          // Reset moves
+          await update(ref(db, "games/" + roomId), { moves: {} });
         }
       } else {
         // Add runs to batter
         const newScore = data[batterRole].score + batterMove;
-        update(ref(db, `games/${roomId}/${batterRole}`), { score: newScore });
-        update(ref(db, `games/${roomId}/moves`), {}); // reset moves
+        await update(ref(db, `games/${roomId}/${batterRole}`), { score: newScore });
+        await update(ref(db, `games/${roomId}/moves`), {}); // reset moves
       }
     }
   });
 }
 
-// Handle move buttons
+// Handle player move buttons
 document.querySelectorAll(".moveBtn").forEach(btn => {
   btn.addEventListener("click", async () => {
-    const move = parseInt(btn.dataset.move);
+    const move = parseInt(btn.dataset.move); // ensure number
+    if (!roomId || !playerRole) return alert("Join a game first!");
     const moveRef = ref(db, `games/${roomId}/moves/${playerRole}`);
     await set(moveRef, move);
   });
