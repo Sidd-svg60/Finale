@@ -68,10 +68,9 @@
     <br /><br />
     <input type="text" id="roomCodeInput" placeholder="Enter Room Code" />
     <button id="joinGameBtn">Join Game</button>
-    
-    <!-- Room Code display -->
+
     <div id="roomCodeBox">
-      <p>Share this Room Code with your friend:</p>
+      <p>Room Code:</p>
       <input type="text" id="roomCodeDisplay" readonly style="font-size:18px; text-align:center; width:120px;" />
       <br /><br />
       <button id="copyCodeBtn">Copy Code</button>
@@ -82,8 +81,11 @@
   <div id="tossScreen">
     <h2>Toss Time!</h2>
     <p id="tossMessage">Waiting for toss...</p>
-    <button id="chooseHeads">Choose Heads</button>
-    <button id="chooseTails">Choose Tails</button>
+    <div id="tossButtons">
+      <button id="chooseBatting">Batting</button>
+      <button id="chooseBowling">Bowling</button>
+    </div>
+    <p>Room Code: <span id="tossRoomCode"></span></p>
   </div>
 
   <!-- Game Screen -->

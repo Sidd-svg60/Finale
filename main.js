@@ -1,4 +1,3 @@
-// Import Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getDatabase, ref, set, get, onValue, update } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
@@ -31,14 +30,17 @@ const roomCodeBox = document.getElementById("roomCodeBox");
 const roomCodeDisplay = document.getElementById("roomCodeDisplay");
 const copyCodeBtn = document.getElementById("copyCodeBtn");
 const tossMessage = document.getElementById("tossMessage");
-const chooseHeads = document.getElementById("chooseHeads");
-const chooseTails = document.getElementById("chooseTails");
+const tossButtons = document.getElementById("tossButtons");
+const chooseBatting = document.getElementById("chooseBatting");
+const chooseBowling = document.getElementById("chooseBowling");
+const tossRoomCode = document.getElementById("tossRoomCode");
 
 let playerName = "";
 let playerRole = "";
 let roomId = "";
+let isTossMaster = false;
 
-// Utility
+// Generate room code
 function generateRoomCode() {
   return Math.random().toString(36).substring(2, 7).toUpperCase();
 }
@@ -46,88 +48,107 @@ function generateRoomCode() {
 // Create Game
 createGameBtn.addEventListener("click", () => {
   playerName = playerNameInput.value.trim();
-  if (!playerName) return alert("Enter your name first!");
+  if (!playerName) return alert("Enter your name!");
 
   roomId = generateRoomCode();
   playerRole = "player1";
 
-  // Create room in Firebase
   set(ref(db, "games/" + roomId), {
     player1: { name: playerName, score: 0 },
-    turn: "toss"
+    turn: "waiting",
+    roomCode: roomId
   });
 
   roomCodeBox.style.display = "block";
   roomCodeDisplay.value = roomId;
 
-  goToToss();
-});
-
-// Copy Room Code
-copyCodeBtn.addEventListener("click", () => {
-  navigator.clipboard.writeText(roomCodeDisplay.value);
-  alert("Room Code copied: " + roomCodeDisplay.value);
+  waitForPlayer2();
 });
 
 // Join Game
 joinGameBtn.addEventListener("click", async () => {
   playerName = playerNameInput.value.trim();
-  if (!playerName) return alert("Enter your name first!");
+  if (!playerName) return alert("Enter your name!");
 
   roomId = roomCodeInput.value.trim().toUpperCase();
-  if (!roomId) return alert("Enter a valid room code");
+  if (!roomId) return alert("Enter a valid room code!");
 
   const snapshot = await get(ref(db, "games/" + roomId));
-  if (!snapshot.exists()) {
-    return alert("Room not found!");
-  }
+  if (!snapshot.exists()) return alert("Room not found!");
 
   playerRole = "player2";
-  set(ref(db, "games/" + roomId + "/player2"), {
-    name: playerName,
-    score: 0
-  });
+  set(ref(db, "games/" + roomId + "/player2"), { name: playerName, score: 0 });
 
-  goToToss();
+  waitForPlayer2();
 });
 
-// Go to Toss Screen
-function goToToss() {
-  lobbyScreen.style.display = "none";
-  tossScreen.style.display = "block";
-
+// Wait for both players to join
+function waitForPlayer2() {
   const gameRef = ref(db, "games/" + roomId);
   onValue(gameRef, (snapshot) => {
-    const gameData = snapshot.val();
-    if (!gameData) return;
+    const data = snapshot.val();
+    if (!data) return;
 
-    if (gameData.turn === "tossResult") {
-      tossMessage.innerText = gameData.tossMessage;
-      setTimeout(() => startGame(), 2000);
+    roomCodeBox.style.display = "block";
+    roomCodeDisplay.value = roomId;
+
+    if (data.player1 && data.player2 && data.turn === "waiting") {
+      // Randomly select Toss Master
+      const tossMaster = Math.random() < 0.5 ? "player1" : "player2";
+      isTossMaster = (playerRole === tossMaster);
+
+      update(ref(db, "games/" + roomId), { turn: "toss", tossMaster });
+
+      if (isTossMaster) showTossScreen();
+      else showWaitingForToss();
     }
   });
 }
 
+// Show Toss Screen to Toss Master
+function showTossScreen() {
+  lobbyScreen.style.display = "none";
+  tossScreen.style.display = "block";
+  tossRoomCode.innerText = roomId;
+  tossMessage.innerText = "You are Toss Master! Choose Batting or Bowling";
+}
+
+// Show waiting message for non-toss master
+function showWaitingForToss() {
+  lobbyScreen.style.display = "none";
+  tossScreen.style.display = "block";
+  tossRoomCode.innerText = roomId;
+  tossMessage.innerText = "Waiting for Toss Master to choose...";
+  tossButtons.style.display = "none";
+}
+
 // Toss choice
-chooseHeads.addEventListener("click", () => doToss("heads"));
-chooseTails.addEventListener("click", () => doToss("tails"));
+chooseBatting.addEventListener("click", () => doToss("batting"));
+chooseBowling.addEventListener("click", () => doToss("bowling"));
 
 function doToss(choice) {
-  const toss = Math.random() < 0.5 ? "heads" : "tails";
-  const winner = choice === toss ? playerRole : (playerRole === "player1" ? "player2" : "player1");
-
   update(ref(db, "games/" + roomId), {
-    turn: "player1", // Player1 bats first by default
-    tossMessage: `Toss result: ${toss.toUpperCase()}! ${winner} won the toss.`
+    tossChoice: choice,
+    turn: "player1" // start game with player1 batting or update logic
   });
 }
 
-// Start Game
-function startGame() {
-  tossScreen.style.display = "none";
-  gameScreen.style.display = "block";
-  roomInfo.innerText = "Room: " + roomId;
+// Start Game once toss choice is set
+onValue(ref(db), (snapshot) => {
+  const data = snapshot.val();
+  if (!data) return;
 
+  if (data.games && data.games[roomId] && data.games[roomId].tossChoice) {
+    tossScreen.style.display = "none";
+    gameScreen.style.display = "block";
+    roomInfo.innerText = "Room: " + roomId;
+
+    listenGameUpdates();
+  }
+});
+
+// Game updates
+function listenGameUpdates() {
   const gameRef = ref(db, "games/" + roomId);
   onValue(gameRef, (snapshot) => {
     const gameData = snapshot.val();
@@ -142,8 +163,8 @@ function startGame() {
   });
 }
 
-// Handle move
-document.querySelectorAll(".moveBtn").forEach((btn) => {
+// Handle move buttons
+document.querySelectorAll(".moveBtn").forEach(btn => {
   btn.addEventListener("click", () => {
     const move = parseInt(btn.dataset.move);
     playMove(move);
@@ -151,23 +172,4 @@ document.querySelectorAll(".moveBtn").forEach((btn) => {
 });
 
 function playMove(move) {
-  if (!roomId) return;
-
-  const gameRef = ref(db, "games/" + roomId);
-  get(gameRef).then((snapshot) => {
-    if (!snapshot.exists()) return;
-    const gameData = snapshot.val();
-
-    if (gameData.turn !== playerRole) return;
-
-    let scorePath = playerRole;
-    let nextTurn = playerRole === "player1" ? "player2" : "player1";
-
-    const newScore = (gameData[scorePath].score || 0) + move;
-    set(ref(db, "games/" + roomId + "/" + scorePath), {
-      name: playerName,
-      score: newScore,
-    });
-    set(ref(db, "games/" + roomId + "/turn"), nextTurn);
-  });
-}
+  const gameRef =
