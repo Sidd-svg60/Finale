@@ -4,11 +4,56 @@
   <meta charset="UTF-8" />
   <title>Hand Cricket Multiplayer</title>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; }
-    #gameScreen { display: none; }
-    button { margin: 5px; padding: 10px; cursor: pointer; }
-    input[readonly] { background-color: #f0f0f0; }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: #e0e0e0;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    h1, h2 {
+      color: #00ffc8;
+      text-shadow: 0px 0px 10px #00ffc8;
+    }
+    #gameScreen, #tossScreen { display: none; }
+    button {
+      margin: 8px;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      background: #1f1f1f;
+      color: #00ffc8;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+      box-shadow: 0px 0px 5px #00ffc8;
+    }
+    button:hover {
+      background: #00ffc8;
+      color: #121212;
+      box-shadow: 0px 0px 15px #00ffc8;
+    }
+    input {
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      outline: none;
+      text-align: center;
+    }
+    input[readonly] {
+      background-color: #1f1f1f;
+      color: #00ffc8;
+      font-weight: bold;
+    }
     #roomCodeBox { margin-top:20px; display:none; }
+    footer {
+      margin-top: 30px;
+      padding: 15px;
+      background: #1f1f1f;
+      color: #888;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
@@ -33,6 +78,14 @@
     </div>
   </div>
 
+  <!-- Toss Screen -->
+  <div id="tossScreen">
+    <h2>Toss Time!</h2>
+    <p id="tossMessage">Waiting for toss...</p>
+    <button id="chooseHeads">Choose Heads</button>
+    <button id="chooseTails">Choose Tails</button>
+  </div>
+
   <!-- Game Screen -->
   <div id="gameScreen">
     <h2 id="status">Waiting...</h2>
@@ -47,6 +100,8 @@
       <button class="moveBtn" data-move="6">6</button>
     </div>
   </div>
+
+  <footer>Developed by Siddhant Dixit</footer>
 
   <script type="module" src="./main.js"></script>
 </body>
