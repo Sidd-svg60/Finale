@@ -48,7 +48,12 @@ createGameBtn.addEventListener("click", () => {
 
   set(ref(db, "games/" + roomId), {
     player1: { name: playerName, score: 0 },
-    turn: "player1",
+    player2: { name: null, score: 0 },
+    turn: null,
+    inning: 1,
+    batting: "player1",
+    bowling: "player2",
+    moves: {},
     roomCode: roomId
   });
 
@@ -76,7 +81,7 @@ joinGameBtn.addEventListener("click", async () => {
   if (!snapshot.exists()) return alert("Room not found!");
 
   playerRole = "player2";
-  set(ref(db, "games/" + roomId + "/player2"), { name: playerName, score: 0 });
+  update(ref(db, "games/" + roomId + "/player2"), { name: playerName, score: 0 });
 
   startListening();
 });
@@ -88,49 +93,70 @@ function startListening() {
   roomInfo.innerText = "Room: " + roomId;
 
   const gameRef = ref(db, "games/" + roomId);
+
   onValue(gameRef, (snapshot) => {
     const data = snapshot.val();
-    if (!data) return;
+    if (!data || !data.player1.name || !data.player2.name) {
+      statusText.innerText = "Waiting for both players to join...";
+      return;
+    }
 
-    // Display scoreboard
-    let board = "";
-    if (data.player1) board += `${data.player1.name}: ${data.player1.score} runs<br>`;
-    if (data.player2) board += `${data.player2.name}: ${data.player2.score} runs<br>`;
-    scoreBoard.innerHTML = board;
+    // Display which player is batting/bowling
+    const battingName = data[data.batting]?.name;
+    const bowlingName = data[data.bowling]?.name;
+    statusText.innerHTML = `Inning ${data.inning}: <br>${battingName} is Batting, ${bowlingName} is Bowling`;
 
-    // Show current player's turn by name
-    if (data.turn === playerRole) {
-      statusText.innerText = `Your Turn (${playerName})`;
-    } else {
-      const otherName = playerRole === "player1" ? data.player2?.name : data.player1?.name;
-      statusText.innerText = `Waiting for ${otherName}`;
+    // Display score
+    scoreBoard.innerHTML = `${data.player1.name}: ${data.player1.score} runs<br>${data.player2.name}: ${data.player2.score} runs`;
+
+    // Check for moves to process
+    if (Object.keys(data.moves).length === 2) {
+      const p1Move = data.moves.player1;
+      const p2Move = data.moves.player2;
+
+      // Determine who is batting
+      const batterRole = data.batting;
+      const bowlerRole = data.bowling;
+      const batterMove = data.moves[batterRole];
+      const bowlerMove = data.moves[bowlerRole];
+
+      // Check out
+      if (batterMove === bowlerMove) {
+        alert(`${data[batterRole].name} is OUT!`);
+
+        // Switch innings or end game
+        if (data.inning === 1) {
+          update(ref(db, "games/" + roomId), {
+            inning: 2,
+            batting: data.bowling,
+            bowling: data.batting,
+            moves: {}
+          });
+        } else {
+          // End game
+          const player1Score = data.player1.score;
+          const player2Score = data.player2.score;
+          let winner = "Draw!";
+          if (player1Score > player2Score) winner = `${data.player1.name} wins!`;
+          else if (player2Score > player1Score) winner = `${data.player2.name} wins!`;
+          alert(`Game Over! ${winner}`);
+          update(ref(db, "games/" + roomId), { moves: {} });
+        }
+      } else {
+        // Add runs to batter
+        const newScore = data[batterRole].score + batterMove;
+        update(ref(db, `games/${roomId}/${batterRole}`), { score: newScore });
+        update(ref(db, `games/${roomId}/moves`), {}); // reset moves
+      }
     }
   });
 }
 
 // Handle moves
 document.querySelectorAll(".moveBtn").forEach(btn => {
-  btn.addEventListener("click", () => {
+  btn.addEventListener("click", async () => {
     const move = parseInt(btn.dataset.move);
-    playMove(move);
+    const moveRef = ref(db, `games/${roomId}/moves/${playerRole}`);
+    await set(moveRef, move);
   });
 });
-
-function playMove(move) {
-  const gameRef = ref(db, "games/" + roomId);
-  get(gameRef).then((snapshot) => {
-    const data = snapshot.val();
-    if (!data) return;
-    if (data.turn !== playerRole) return;
-
-    const scorePath = playerRole;
-    const nextTurn = playerRole === "player1" ? "player2" : "player1";
-
-    const newScore = (data[scorePath].score || 0) + move;
-    set(ref(db, "games/" + roomId + "/" + scorePath), {
-      name: playerName,
-      score: newScore
-    });
-    set(ref(db, "games/" + roomId + "/turn"), nextTurn);
-  });
-}
