@@ -6,9 +6,9 @@
   <style>
     body { font-family: Arial, sans-serif; text-align: center; }
     #gameScreen { display: none; }
-    #lobbyScreen { display: block; }
-    button { margin: 5px; padding: 10px; }
+    button { margin: 5px; padding: 10px; cursor: pointer; }
     input[readonly] { background-color: #f0f0f0; }
+    #roomCodeBox { margin-top:20px; display:none; }
   </style>
 </head>
 <body>
@@ -25,7 +25,7 @@
     <button id="joinGameBtn">Join Game</button>
     
     <!-- Room Code display -->
-    <div id="roomCodeBox" style="margin-top:20px; display:none;">
+    <div id="roomCodeBox">
       <p>Share this Room Code with your friend:</p>
       <input type="text" id="roomCodeDisplay" readonly style="font-size:18px; text-align:center; width:120px;" />
       <br /><br />
@@ -36,6 +36,7 @@
   <!-- Game Screen -->
   <div id="gameScreen">
     <h2 id="status">Waiting...</h2>
+    <p id="roomInfo"></p>
     <div id="scoreBoard"></div>
     <div>
       <button class="moveBtn" data-move="1">1</button>

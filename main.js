@@ -1,7 +1,7 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+// Import Firebase
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
-// Your Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyB4BAOLryVquqH_tqYPHUi4RypwOvWqrLo",
   authDomain: "iiiiiiii-1b65f.firebaseapp.com",
@@ -13,29 +13,28 @@ const firebaseConfig = {
   measurementId: "G-LC4HKZZDG2"
 };
 
-// Init Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// HTML Elements
+// Elements
 const lobbyScreen = document.getElementById("lobbyScreen");
 const gameScreen = document.getElementById("gameScreen");
-const playerNameInput = document.getElementById("playerName");
 const createGameBtn = document.getElementById("createGameBtn");
 const joinGameBtn = document.getElementById("joinGameBtn");
+const playerNameInput = document.getElementById("playerName");
 const roomCodeInput = document.getElementById("roomCodeInput");
+const statusText = document.getElementById("status");
+const scoreBoard = document.getElementById("scoreBoard");
+const roomInfo = document.getElementById("roomInfo");
 const roomCodeBox = document.getElementById("roomCodeBox");
 const roomCodeDisplay = document.getElementById("roomCodeDisplay");
 const copyCodeBtn = document.getElementById("copyCodeBtn");
-const statusText = document.getElementById("status");
-const scoreBoard = document.getElementById("scoreBoard");
-const moveButtons = document.querySelectorAll(".moveBtn");
 
 let playerName = "";
-let playerRole = ""; // "player1" or "player2"
+let playerRole = "";
 let roomId = "";
 
-// Generate random room code
+// Utility
 function generateRoomCode() {
   return Math.random().toString(36).substring(2, 7).toUpperCase();
 }
@@ -54,7 +53,7 @@ createGameBtn.addEventListener("click", () => {
     turn: "player1"
   });
 
-  // Show Room Code in textbox
+  // Show Room Code
   roomCodeBox.style.display = "block";
   roomCodeDisplay.value = roomId;
 
@@ -63,10 +62,8 @@ createGameBtn.addEventListener("click", () => {
 
 // Copy Room Code
 copyCodeBtn.addEventListener("click", () => {
-  roomCodeDisplay.select();
-  navigator.clipboard.writeText(roomCodeDisplay.value).then(() => {
-    alert("Room Code copied to clipboard!");
-  });
+  navigator.clipboard.writeText(roomCodeDisplay.value);
+  alert("Room Code copied: " + roomCodeDisplay.value);
 });
 
 // Join Game
@@ -75,19 +72,16 @@ joinGameBtn.addEventListener("click", async () => {
   if (!playerName) return alert("Enter your name first!");
 
   roomId = roomCodeInput.value.trim().toUpperCase();
-  if (!roomId) return alert("Enter a Room Code!");
+  if (!roomId) return alert("Enter a valid room code");
 
-  const gameRef = ref(db, "games/" + roomId);
-  const snapshot = await get(gameRef);
-
+  const snapshot = await get(ref(db, "games/" + roomId));
   if (!snapshot.exists()) {
-    alert("Room not found!");
-    return;
+    return alert("Room not found!");
   }
 
   playerRole = "player2";
 
-  // Add player2 to Firebase
+  // Add Player 2 to Firebase
   set(ref(db, "games/" + roomId + "/player2"), {
     name: playerName,
     score: 0
@@ -96,53 +90,61 @@ joinGameBtn.addEventListener("click", async () => {
   startGame();
 });
 
-// Start Game Screen
+// Start Game
 function startGame() {
   lobbyScreen.style.display = "none";
   gameScreen.style.display = "block";
+  roomInfo.innerText = "Room: " + roomId;
 
-  listenForUpdates();
-}
-
-// Listen for Firebase changes
-function listenForUpdates() {
   const gameRef = ref(db, "games/" + roomId);
-
   onValue(gameRef, (snapshot) => {
-    const data = snapshot.val();
-    if (!data) return;
+    const gameData = snapshot.val();
+    if (!gameData) return;
 
-    let scoreText = "";
-    if (data.player1) scoreText += `${data.player1.name}: ${data.player1.score} | `;
-    if (data.player2) scoreText += `${data.player2.name}: ${data.player2.score}`;
-    scoreBoard.innerText = scoreText;
+    // Update scoreboard
+    let board = "";
+    if (gameData.player1) {
+      board += `${gameData.player1.name}: ${gameData.player1.score} runs<br>`;
+    }
+    if (gameData.player2) {
+      board += `${gameData.player2.name}: ${gameData.player2.score} runs<br>`;
+    }
+    scoreBoard.innerHTML = board;
 
-    statusText.innerText = `Turn: ${data.turn}`;
+    statusText.innerText = gameData.turn === playerRole ? "Your Turn!" : "Opponent's Turn!";
   });
 }
 
-// Make a move
-moveButtons.forEach((btn) => {
+// Handle move
+document.querySelectorAll(".moveBtn").forEach((btn) => {
   btn.addEventListener("click", () => {
     const move = parseInt(btn.dataset.move);
-
-    const turnRef = ref(db, "games/" + roomId + "/turn");
-    get(turnRef).then((snapshot) => {
-      const currentTurn = snapshot.val();
-
-      if (currentTurn === playerRole) {
-        const scoreRef = ref(db, "games/" + roomId + "/" + playerRole + "/score");
-        get(scoreRef).then((snap) => {
-          let currentScore = snap.val() || 0;
-          set(scoreRef, currentScore + move);
-
-          // Switch turn
-          const nextTurn = playerRole === "player1" ? "player2" : "player1";
-          set(turnRef, nextTurn);
-        });
-      } else {
-        alert("Wait for your turn!");
-      }
-    });
+    playMove(move);
   });
 });
+
+function playMove(move) {
+  if (!roomId) return;
+
+  const gameRef = ref(db, "games/" + roomId);
+  get(gameRef).then((snapshot) => {
+    if (!snapshot.exists()) return;
+    const gameData = snapshot.val();
+
+    if (gameData.turn !== playerRole) return; // Not your turn
+
+    let scorePath = "player1";
+    let nextTurn = "player2";
+    if (playerRole === "player2") {
+      scorePath = "player2";
+      nextTurn = "player1";
+    }
+
+    const newScore = (gameData[scorePath].score || 0) + move;
+    set(ref(db, "games/" + roomId + "/" + scorePath), {
+      name: playerName,
+      score: newScore,
+    });
+    set(ref(db, "games/" + roomId + "/turn"), nextTurn);
+  });
+}
