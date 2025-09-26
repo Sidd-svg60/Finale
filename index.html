@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hand Cricket 1v1 Multiplayer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 30px;
+      background-color: #f7f7f7;
+    }
+
+    #game, #login {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      display: inline-block;
+      box-shadow: 0px 0px 10px rgba(0,0,0,0.2);
+      margin-top: 20px;
+    }
+
+    #buttons button {
+      margin: 5px;
+      padding: 10px 20px;
+      font-size: 18px;
+      cursor: pointer;
+      border-radius: 5px;
+      border: none;
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    #buttons button:disabled {
+      background-color: #aaa;
+      cursor: not-allowed;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    input {
+      padding: 8px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 8px 12px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Hand Cricket 1v1 Multiplayer</h1>
+
+  <!-- Login Screen -->
+  <div id="login">
+    <p>Enter your name:</p>
+    <input type="text" id="playerNameInput" placeholder="Your Name" />
+    <button id="startButton">Start Game</button>
+  </div>
+
+  <!-- Game Screen -->
+  <div id="game" style="display:none;">
+    <p>Your Score: <span id="playerScore">0</span></p>
+    <p>Opponent Score: <span id="opponentScore">0</span></p>
+    <p>Turn: <span id="turn">Waiting...</span></p>
+
+    <div id="buttons">
+      <button onclick="playRun(1)">1</button>
+      <button onclick="playRun(2)">2</button>
+      <button onclick="playRun(3)">3</button>
+      <button onclick="playRun(4)">4</button>
+      <button onclick="playRun(5)">5</button>
+      <button onclick="playRun(6)">6</button>
+    </div>
+  </div>
+
+  <!-- Load main.js -->
+  <script type="module" src="main.js"></script>
+
+</body>
+</html>
