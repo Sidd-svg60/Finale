@@ -1,87 +1,49 @@
-<!DOCTYPE html>
+l<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hand Cricket Multiplayer - Siddhant</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 20px;
-      background-color: #f2f2f2;
-    }
-    #lobbyScreen, #gameScreen {
-      display: none;
-      margin-top: 20px;
-      padding: 20px;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    input, button {
-      padding: 10px;
-      margin: 5px;
-      font-size: 16px;
-    }
-    .moveBtn {
-      width: 60px;
-      margin: 5px;
-      cursor: pointer;
-    }
-    #scoreBoard {
-      margin-top: 20px;
-      font-weight: bold;
-    }
-    #status {
-      margin-top: 15px;
-      font-size: 18px;
-      color: #333;
-    }
-    #roomCodeBox {
-      margin-top: 10px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hand Cricket Multiplayer - Siddhant</title>
+<style>
+  body { font-family: Arial; text-align: center; margin: 20px; }
+  #lobbyScreen, #gameScreen { display: none; margin-top: 20px; }
+  .moveBtn { padding: 10px 20px; margin: 5px; font-size: 16px; cursor: pointer; }
+  #scoreBoard { margin-top: 15px; font-weight: bold; }
+  #status { margin-top: 10px; font-size: 18px; }
+</style>
 </head>
 <body>
 
-  <h1>Hand Cricket Multiplayer</h1>
-  <h2>by Siddhant</h2>
+<h1>Hand Cricket Multiplayer</h1>
+<h2>by Siddhant</h2>
 
-  <div id="lobbyScreen">
-    <input type="text" id="playerName" placeholder="Enter your name" />
-    <br>
-    <button id="createGameBtn">Create Game</button>
-    <br>
-    <input type="text" id="roomCodeInput" placeholder="Enter Room Code" />
-    <button id="joinGameBtn">Join Game</button>
-
-    <div id="roomCodeBox" style="display:none;">
-      <p>Room Code:</p>
-      <input type="text" id="roomCodeDisplay" readonly />
-      <button id="copyCodeBtn">Copy Code</button>
-    </div>
+<div id="lobbyScreen">
+  <input type="text" id="playerName" placeholder="Enter your name"><br><br>
+  <button id="createGameBtn">Create Game</button><br><br>
+  <input type="text" id="roomCodeInput" placeholder="Enter Room Code">
+  <button id="joinGameBtn">Join Game</button><br><br>
+  <div id="roomCodeBox" style="display:none;">
+    <p>Room Code:</p>
+    <input type="text" id="roomCodeDisplay" readonly>
   </div>
+</div>
 
-  <div id="gameScreen">
-    <p id="roomInfo"></p>
-    <div id="status">Waiting for players...</div>
-
-    <div id="moves">
-      <p>Make your move:</p>
-      <button class="moveBtn" data-move="1">1</button>
-      <button class="moveBtn" data-move="2">2</button>
-      <button class="moveBtn" data-move="3">3</button>
-      <button class="moveBtn" data-move="4">4</button>
-      <button class="moveBtn" data-move="5">5</button>
-      <button class="moveBtn" data-move="6">6</button>
-    </div>
-
-    <div id="scoreBoard"></div>
+<div id="gameScreen">
+  <p id="roomInfo"></p>
+  <div id="status">Waiting for both players...</div>
+  <div id="moves">
+    <button class="moveBtn" data-move="1">1</button>
+    <button class="moveBtn" data-move="2">2</button>
+    <button class="moveBtn" data-move="3">3</button>
+    <button class="moveBtn" data-move="4">4</button>
+    <button class="moveBtn" data-move="5">5</button>
+    <button class="moveBtn" data-move="6">6</button>
   </div>
+  <div id="scoreBoard"></div>
+</div>
 
-  <!-- Firebase SDKs -->
-  <script type="module" src="game.js"></script>
+<!-- Load main.js -->
+<script type="module" src="main.js"></script>
 
 </body>
 </html>
