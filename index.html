@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Hand Cricket Multiplayer</title>
   <style>
     body {
@@ -16,7 +16,7 @@
       color: #00ffc8;
       text-shadow: 0px 0px 10px #00ffc8;
     }
-    #gameScreen, #tossScreen { display: none; }
+    #gameScreen { display: none; }
     button {
       margin: 8px;
       padding: 12px 20px;
@@ -46,7 +46,7 @@
       color: #00ffc8;
       font-weight: bold;
     }
-    #roomCodeBox { margin-top:20px; display:none; }
+    #roomCodeBox { margin-top: 20px; display:none; }
     footer {
       margin-top: 30px;
       padding: 15px;
@@ -63,29 +63,18 @@
   <div id="lobbyScreen">
     <h2>Create or Join Game</h2>
     <input type="text" id="playerName" placeholder="Enter your name" />
-    <br /><br />
+    <br><br>
     <button id="createGameBtn">Create Game</button>
-    <br /><br />
+    <br><br>
     <input type="text" id="roomCodeInput" placeholder="Enter Room Code" />
     <button id="joinGameBtn">Join Game</button>
 
     <div id="roomCodeBox">
       <p>Room Code:</p>
-      <input type="text" id="roomCodeDisplay" readonly style="font-size:18px; text-align:center; width:120px;" />
-      <br /><br />
+      <input type="text" id="roomCodeDisplay" readonly style="font-size:18px; text-align:center; width:120px;">
+      <br><br>
       <button id="copyCodeBtn">Copy Code</button>
     </div>
-  </div>
-
-  <!-- Toss Screen -->
-  <div id="tossScreen">
-    <h2>Toss Time!</h2>
-    <p id="tossMessage">Waiting for toss...</p>
-    <div id="tossButtons">
-      <button id="chooseBatting">Batting</button>
-      <button id="chooseBowling">Bowling</button>
-    </div>
-    <p>Room Code: <span id="tossRoomCode"></span></p>
   </div>
 
   <!-- Game Screen -->

@@ -17,7 +17,6 @@ const db = getDatabase(app);
 
 // Elements
 const lobbyScreen = document.getElementById("lobbyScreen");
-const tossScreen = document.getElementById("tossScreen");
 const gameScreen = document.getElementById("gameScreen");
 const createGameBtn = document.getElementById("createGameBtn");
 const joinGameBtn = document.getElementById("joinGameBtn");
@@ -29,18 +28,12 @@ const roomInfo = document.getElementById("roomInfo");
 const roomCodeBox = document.getElementById("roomCodeBox");
 const roomCodeDisplay = document.getElementById("roomCodeDisplay");
 const copyCodeBtn = document.getElementById("copyCodeBtn");
-const tossMessage = document.getElementById("tossMessage");
-const tossButtons = document.getElementById("tossButtons");
-const chooseBatting = document.getElementById("chooseBatting");
-const chooseBowling = document.getElementById("chooseBowling");
-const tossRoomCode = document.getElementById("tossRoomCode");
 
 let playerName = "";
 let playerRole = "";
 let roomId = "";
-let isTossMaster = false;
 
-// Generate room code
+// Utility
 function generateRoomCode() {
   return Math.random().toString(36).substring(2, 7).toUpperCase();
 }
@@ -55,14 +48,20 @@ createGameBtn.addEventListener("click", () => {
 
   set(ref(db, "games/" + roomId), {
     player1: { name: playerName, score: 0 },
-    turn: "waiting",
+    turn: "player1",
     roomCode: roomId
   });
 
   roomCodeBox.style.display = "block";
   roomCodeDisplay.value = roomId;
 
-  waitForPlayer2();
+  startListening();
+});
+
+// Copy Room Code
+copyCodeBtn.addEventListener("click", () => {
+  navigator.clipboard.writeText(roomCodeDisplay.value);
+  alert("Room code copied: " + roomCodeDisplay.value);
 });
 
 // Join Game
@@ -71,7 +70,7 @@ joinGameBtn.addEventListener("click", async () => {
   if (!playerName) return alert("Enter your name!");
 
   roomId = roomCodeInput.value.trim().toUpperCase();
-  if (!roomId) return alert("Enter a valid room code!");
+  if (!roomId) return alert("Enter valid room code");
 
   const snapshot = await get(ref(db, "games/" + roomId));
   if (!snapshot.exists()) return alert("Room not found!");
@@ -79,91 +78,37 @@ joinGameBtn.addEventListener("click", async () => {
   playerRole = "player2";
   set(ref(db, "games/" + roomId + "/player2"), { name: playerName, score: 0 });
 
-  waitForPlayer2();
+  startListening();
 });
 
-// Wait for both players to join
-function waitForPlayer2() {
+// Listen for game updates
+function startListening() {
+  lobbyScreen.style.display = "none";
+  gameScreen.style.display = "block";
+  roomInfo.innerText = "Room: " + roomId;
+
   const gameRef = ref(db, "games/" + roomId);
   onValue(gameRef, (snapshot) => {
     const data = snapshot.val();
     if (!data) return;
 
-    roomCodeBox.style.display = "block";
-    roomCodeDisplay.value = roomId;
+    // Display scoreboard
+    let board = "";
+    if (data.player1) board += `${data.player1.name}: ${data.player1.score} runs<br>`;
+    if (data.player2) board += `${data.player2.name}: ${data.player2.score} runs<br>`;
+    scoreBoard.innerHTML = board;
 
-    if (data.player1 && data.player2 && data.turn === "waiting") {
-      // Randomly select Toss Master
-      const tossMaster = Math.random() < 0.5 ? "player1" : "player2";
-      isTossMaster = (playerRole === tossMaster);
-
-      update(ref(db, "games/" + roomId), { turn: "toss", tossMaster });
-
-      if (isTossMaster) showTossScreen();
-      else showWaitingForToss();
+    // Show current player's turn by name
+    if (data.turn === playerRole) {
+      statusText.innerText = `Your Turn (${playerName})`;
+    } else {
+      const otherName = playerRole === "player1" ? data.player2?.name : data.player1?.name;
+      statusText.innerText = `Waiting for ${otherName}`;
     }
   });
 }
 
-// Show Toss Screen to Toss Master
-function showTossScreen() {
-  lobbyScreen.style.display = "none";
-  tossScreen.style.display = "block";
-  tossRoomCode.innerText = roomId;
-  tossMessage.innerText = "You are Toss Master! Choose Batting or Bowling";
-}
-
-// Show waiting message for non-toss master
-function showWaitingForToss() {
-  lobbyScreen.style.display = "none";
-  tossScreen.style.display = "block";
-  tossRoomCode.innerText = roomId;
-  tossMessage.innerText = "Waiting for Toss Master to choose...";
-  tossButtons.style.display = "none";
-}
-
-// Toss choice
-chooseBatting.addEventListener("click", () => doToss("batting"));
-chooseBowling.addEventListener("click", () => doToss("bowling"));
-
-function doToss(choice) {
-  update(ref(db, "games/" + roomId), {
-    tossChoice: choice,
-    turn: "player1" // start game with player1 batting or update logic
-  });
-}
-
-// Start Game once toss choice is set
-onValue(ref(db), (snapshot) => {
-  const data = snapshot.val();
-  if (!data) return;
-
-  if (data.games && data.games[roomId] && data.games[roomId].tossChoice) {
-    tossScreen.style.display = "none";
-    gameScreen.style.display = "block";
-    roomInfo.innerText = "Room: " + roomId;
-
-    listenGameUpdates();
-  }
-});
-
-// Game updates
-function listenGameUpdates() {
-  const gameRef = ref(db, "games/" + roomId);
-  onValue(gameRef, (snapshot) => {
-    const gameData = snapshot.val();
-    if (!gameData) return;
-
-    let board = "";
-    if (gameData.player1) board += `${gameData.player1.name}: ${gameData.player1.score} runs<br>`;
-    if (gameData.player2) board += `${gameData.player2.name}: ${gameData.player2.score} runs<br>`;
-    scoreBoard.innerHTML = board;
-
-    statusText.innerText = gameData.turn === playerRole ? "Your Turn!" : "Opponent's Turn!";
-  });
-}
-
-// Handle move buttons
+// Handle moves
 document.querySelectorAll(".moveBtn").forEach(btn => {
   btn.addEventListener("click", () => {
     const move = parseInt(btn.dataset.move);
@@ -172,4 +117,20 @@ document.querySelectorAll(".moveBtn").forEach(btn => {
 });
 
 function playMove(move) {
-  const gameRef =
+  const gameRef = ref(db, "games/" + roomId);
+  get(gameRef).then((snapshot) => {
+    const data = snapshot.val();
+    if (!data) return;
+    if (data.turn !== playerRole) return;
+
+    const scorePath = playerRole;
+    const nextTurn = playerRole === "player1" ? "player2" : "player1";
+
+    const newScore = (data[scorePath].score || 0) + move;
+    set(ref(db, "games/" + roomId + "/" + scorePath), {
+      name: playerName,
+      score: newScore
+    });
+    set(ref(db, "games/" + roomId + "/turn"), nextTurn);
+  });
+}
