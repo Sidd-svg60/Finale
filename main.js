@@ -49,7 +49,6 @@ createGameBtn.addEventListener("click", () => {
   set(ref(db, "games/" + roomId), {
     player1: { name: playerName, score: 0 },
     player2: { name: null, score: 0 },
-    turn: null,
     inning: 1,
     batting: "player1",
     bowling: "player2",
@@ -86,7 +85,7 @@ joinGameBtn.addEventListener("click", async () => {
   startListening();
 });
 
-// Listen for game updates
+// Start listening for game updates
 function startListening() {
   lobbyScreen.style.display = "none";
   gameScreen.style.display = "block";
@@ -101,31 +100,26 @@ function startListening() {
       return;
     }
 
-    // Display which player is batting/bowling
+    // Display batting/bowling info
     const battingName = data[data.batting]?.name;
     const bowlingName = data[data.bowling]?.name;
     statusText.innerHTML = `Inning ${data.inning}: <br>${battingName} is Batting, ${bowlingName} is Bowling`;
 
-    // Display score
+    // Display scores
     scoreBoard.innerHTML = `${data.player1.name}: ${data.player1.score} runs<br>${data.player2.name}: ${data.player2.score} runs`;
 
-    // Check for moves to process
+    // Check if both moves submitted
     if (Object.keys(data.moves).length === 2) {
-      const p1Move = data.moves.player1;
-      const p2Move = data.moves.player2;
-
-      // Determine who is batting
       const batterRole = data.batting;
       const bowlerRole = data.bowling;
       const batterMove = data.moves[batterRole];
       const bowlerMove = data.moves[bowlerRole];
 
-      // Check out
       if (batterMove === bowlerMove) {
         alert(`${data[batterRole].name} is OUT!`);
 
-        // Switch innings or end game
         if (data.inning === 1) {
+          // Switch innings
           update(ref(db, "games/" + roomId), {
             inning: 2,
             batting: data.bowling,
@@ -140,6 +134,7 @@ function startListening() {
           if (player1Score > player2Score) winner = `${data.player1.name} wins!`;
           else if (player2Score > player1Score) winner = `${data.player2.name} wins!`;
           alert(`Game Over! ${winner}`);
+          // Reset moves to allow replay
           update(ref(db, "games/" + roomId), { moves: {} });
         }
       } else {
@@ -152,7 +147,7 @@ function startListening() {
   });
 }
 
-// Handle moves
+// Handle move buttons
 document.querySelectorAll(".moveBtn").forEach(btn => {
   btn.addEventListener("click", async () => {
     const move = parseInt(btn.dataset.move);
