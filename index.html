@@ -1,49 +1,81 @@
-l<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hand Cricket Multiplayer - Siddhant</title>
-<style>
-  body { font-family: Arial; text-align: center; margin: 20px; }
-  #lobbyScreen, #gameScreen { display: none; margin-top: 20px; }
-  .moveBtn { padding: 10px 20px; margin: 5px; font-size: 16px; cursor: pointer; }
-  #scoreBoard { margin-top: 15px; font-weight: bold; }
-  #status { margin-top: 10px; font-size: 18px; }
-</style>
+  <meta charset="utf-8" />
+  <title>Hand Cricket Multiplayer</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #0f1012;
+      color: #e6fff3;
+      margin: 0;
+      padding: 24px;
+      text-align: center;
+    }
+    h1 { color: #00ffc8; text-shadow: 0 0 8px rgba(0,255,200,0.12); margin-bottom: 8px; }
+    .card { background:#111216; padding:18px; border-radius:12px; box-shadow: 0 6px 24px rgba(0,0,0,0.6); display:inline-block; width:100%; max-width:480px; }
+    input[type="text"] { padding:10px; border-radius:8px; border:0; background:#0f1315; color:#cfffe8; width:70%; }
+    button { margin:8px; padding:10px 16px; border-radius:8px; border:0; background:#162022; color:#00ffc8; cursor:pointer; box-shadow: 0 2px 8px rgba(0,255,200,0.06); }
+    button.primary { background:#00ffc8; color:#081014; }
+    #roomCodeBox { margin-top:12px; display:none; }
+    input[readonly] { background:#0d1413; text-align:center; font-weight:600; width:140px; }
+    #gameScreen { display:none; margin-top:12px; }
+    #status { font-size:16px; margin-bottom:8px; color:#c7fff0; }
+    #lastEvent { margin-top:8px; color:#9fffdc; font-weight:600; }
+    .moves { margin-top:12px; }
+    .moves button { width:48px; height:48px; font-size:18px; border-radius:8px; }
+    #scoreBoard { margin-top:10px; color:#dfffe8; font-size:15px; }
+    footer { margin-top:20px; color:#9aa; font-size:13px; }
+    #winnerBox { margin-top:12px; color:#ffd59a; font-weight:700; }
+    @media (max-width:520px){ input[type="text"]{width:92%} .card{padding:14px} }
+  </style>
 </head>
 <body>
+  <h1>Hand Cricket Multiplayer</h1>
 
-<h1>Hand Cricket Multiplayer</h1>
-<h2>by Siddhant</h2>
+  <div class="card" id="lobbyScreen">
+    <h2 style="margin:6px 0 12px 0">Create or Join</h2>
+    <input id="playerName" type="text" placeholder="Enter your name" />
+    <br/>
+    <div style="margin-top:12px;">
+      <button id="createGameBtn">Create Game</button>
+    </div>
 
-<div id="lobbyScreen">
-  <input type="text" id="playerName" placeholder="Enter your name"><br><br>
-  <button id="createGameBtn">Create Game</button><br><br>
-  <input type="text" id="roomCodeInput" placeholder="Enter Room Code">
-  <button id="joinGameBtn">Join Game</button><br><br>
-  <div id="roomCodeBox" style="display:none;">
-    <p>Room Code:</p>
-    <input type="text" id="roomCodeDisplay" readonly>
+    <div style="margin-top:8px;">
+      <input id="roomCodeInput" type="text" placeholder="Enter Room Code" />
+      <button id="joinGameBtn">Join Game</button>
+    </div>
+
+    <div id="roomCodeBox">
+      <p style="margin:10px 0 6px 0">Room Code (share with friend):</p>
+      <input id="roomCodeDisplay" readonly />
+      <div style="margin-top:8px;">
+        <button id="copyCodeBtn">Copy Code</button>
+      </div>
+      <p id="waitingText" style="margin-top:10px;color:#aee">Waiting for other player...</p>
+    </div>
   </div>
-</div>
 
-<div id="gameScreen">
-  <p id="roomInfo"></p>
-  <div id="status">Waiting for both players...</div>
-  <div id="moves">
-    <button class="moveBtn" data-move="1">1</button>
-    <button class="moveBtn" data-move="2">2</button>
-    <button class="moveBtn" data-move="3">3</button>
-    <button class="moveBtn" data-move="4">4</button>
-    <button class="moveBtn" data-move="5">5</button>
-    <button class="moveBtn" data-move="6">6</button>
+  <div class="card" id="gameScreen" style="margin-top:18px;">
+    <div id="roomInfo" style="font-size:13px;color:#aee;margin-bottom:8px;"></div>
+    <div id="status">Loading game...</div>
+    <div id="scoreBoard"></div>
+    <div id="lastEvent"></div>
+    <div class="moves">
+      <button class="moveBtn" data-move="1">1</button>
+      <button class="moveBtn" data-move="2">2</button>
+      <button class="moveBtn" data-move="3">3</button>
+      <button class="moveBtn" data-move="4">4</button>
+      <button class="moveBtn" data-move="5">5</button>
+      <button class="moveBtn" data-move="6">6</button>
+    </div>
+
+    <div id="winnerBox"></div>
   </div>
-  <div id="scoreBoard"></div>
-</div>
 
-<!-- Load main.js -->
-<script type="module" src="main.js"></script>
+  <footer>Developed by Siddhant Dixit</footer>
 
+  <script type="module" src="./main.js"></script>
 </body>
 </html>
